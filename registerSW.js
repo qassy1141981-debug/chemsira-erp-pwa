@@ -1,1 +1,1 @@
-if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/chemsira-erb33/sw.js', { scope: '/chemsira-erb33/' })})}
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/chemsira-erp-pwa/sw.js', { scope: '/chemsira-erp-pwa/' })})}
