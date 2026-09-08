@@ -1,10 +1,10 @@
 {
-  "id": "/alsafa-accounting/",
-  "name": "النظام المحاسبي المتكامل",
-  "short_name": "محاسبة",
-  "description": "نظام محاسبي متكامل يعمل محلياً بدون سيرفر",
-  "start_url": "/alsafa-accounting/",
-  "scope": "/alsafa-accounting/",
+  "id": "/chemsira-erb33/",
+  "name": "Chemsira ERP 33",
+  "short_name": "Chemsira",
+  "description": "نظام ERP متكامل يعمل محلياً ويدعم التثبيت كتطبيق PWA",
+  "start_url": "/chemsira-erb33/",
+  "scope": "/chemsira-erb33/",
   "display": "standalone",
   "background_color": "#1e2a4a",
   "theme_color": "#1e2a4a",
@@ -12,9 +12,9 @@
   "lang": "ar",
   "dir": "rtl",
   "icons": [
-    { "src": "/alsafa-accounting/icon/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/alsafa-accounting/icon/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/alsafa-accounting/icon/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
-    { "src": "/alsafa-accounting/icon/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "/chemsira-erb33/icon/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/chemsira-erb33/icon/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/chemsira-erb33/icon/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/chemsira-erb33/icon/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }
