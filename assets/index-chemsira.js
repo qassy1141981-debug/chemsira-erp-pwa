@@ -477,28 +477,28 @@ ${ne}`,{duration:6e3});return}try{let ne=new Map;for(let mt of n.items)mt.produc
 <title>\u0641\u0627\u062A\u0648\u0631\u0629 \u0628\u064A\u0639 ${ne.invoiceNumber}</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Cairo',Arial,sans-serif;background:#f0f4f8;color:#1a1a2e;font-size:13px;${Qe?"width:210mm;margin:0 auto;":""}}
-.page{background:#fff;max-width:800px;margin:${Qe?"0 auto":"20px auto"};padding:40px;box-shadow:0 4px 24px rgba(0,0,0,.10);border-radius:12px}
+ body{font-family:'Cairo',Arial,sans-serif;background:#f0f4f8;color:#1a1a2e;font-size:13px;${Qe?"width:210mm;margin:0 auto;":""}}
+ .page{background:#fff;max-width:800px;margin:${Qe?"0 auto":"20px auto"};padding:40px;box-shadow:0 4px 24px rgba(0,0,0,.10);border-radius:12px}
 .header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:24px;border-bottom:3px solid #1e2a4a;margin-bottom:24px}
 .company-info{display:flex;align-items:center;gap:14px}.company-logo{width:72px;height:72px;object-fit:contain;border-radius:10px;border:1px solid #e2e8f0}
 .logo-placeholder{width:72px;height:72px;background:#1e2a4a;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;font-weight:800}
 .company-name{font-size:20px;font-weight:800;color:#1e2a4a;margin-bottom:4px}.company-detail{font-size:12px;color:#64748b;line-height:1.8}
-.invoice-badge{text-align:left;direction:ltr}.invoice-title{font-size:28px;font-weight:800;color:#1e2a4a}.invoice-num{font-size:15px;color:#3b82f6;font-weight:700;margin-top:4px}.invoice-date{font-size:12px;color:#64748b;margin-top:4px}
+ .invoice-badge{text-align:left;direction:ltr}.invoice-title{font-size:28px;font-weight:800;color:#1e2a4a}.invoice-num{font-size:15px;color:#3b82f6;font-weight:700;margin-top:4px}.invoice-date{font-size:12px;color:#64748b;margin-top:4px}
 .client-section{display:flex;justify-content:space-between;align-items:stretch;gap:16px;margin-bottom:24px}
 .client-box{flex:1;background:#f8fafc;border:1px solid #e2e8f0;border-right:4px solid #1e2a4a;border-radius:8px;padding:14px 16px}
 .status-box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 16px;text-align:center;min-width:130px;display:flex;flex-direction:column;justify-content:center;gap:6px}
 .box-label{font-size:11px;color:#94a3b8;font-weight:600;margin-bottom:6px}.client-name{font-size:16px;font-weight:700;color:#1e2a4a}
 .status-badge{display:inline-block;padding:4px 14px;border-radius:20px;font-size:13px;font-weight:700;color:${Wr};background:${Wr}18;border:1px solid ${Wr}40}
-.items-table{width:100%;border-collapse:collapse;margin-bottom:20px}.items-table thead tr{background:#1e2a4a;color:#fff}
+ .items-table{width:100%;border-collapse:collapse;margin-bottom:20px}.items-table thead tr{background:#1e2a4a;color:#fff}
 .items-table thead th{padding:10px 12px;text-align:right;font-size:12px;font-weight:600}.items-table thead th:first-child{border-radius:0 6px 6px 0}.items-table thead th:last-child{border-radius:6px 0 0 6px;text-align:left}
-.items-table tbody tr{border-bottom:1px solid #f1f5f9}.items-table tbody tr:nth-child(even){background:#f8fafc}.items-table tbody td{padding:10px 12px;font-size:13px}.items-table tbody td:last-child{text-align:left;font-weight:600;color:#1e2a4a}
-.totals-section{display:flex;justify-content:flex-start;margin-bottom:24px}.totals-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px 20px;min-width:260px}
+ .items-table tbody tr{border-bottom:1px solid #f1f5f9}.items-table tbody tr:nth-child(even){background:#f8fafc}.items-table tbody td{padding:10px 12px;font-size:13px}.items-table tbody td:last-child{text-align:left;font-weight:600;color:#1e2a4a}
+ .totals-section{display:flex;justify-content:flex-start;margin-bottom:24px}.totals-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px 20px;min-width:260px}
 .totals-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-bottom:1px dashed #e2e8f0}.totals-row:last-child{border-bottom:none}.totals-row.net{font-size:16px;font-weight:800;color:#1e2a4a;padding-top:10px;margin-top:4px}.totals-row.paid{color:#16a34a;font-weight:700}.totals-row.remaining{color:#dc2626;font-weight:700}
 .bottom-section{display:flex;justify-content:space-between;gap:20px;margin-bottom:24px}.notes-box{flex:1;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px 14px}.notes-title{font-size:11px;font-weight:700;color:#92400e;margin-bottom:6px}
 .sign-box{min-width:180px;border:1px dashed #cbd5e1;border-radius:8px;padding:12px 14px;text-align:center}.sign-line{margin-top:36px;border-top:1px solid #cbd5e1;padding-top:6px;font-size:11px;color:#94a3b8}
 .footer{border-top:2px solid #1e2a4a;padding-top:14px;display:flex;justify-content:space-between;align-items:center}.footer-text{font-size:11px;color:#94a3b8}.footer-brand{font-size:11px;color:#1e2a4a;font-weight:700}
-@page{size:A4 portrait;margin:8mm}
-@media print{html,body{width:210mm!important;margin:0!important;padding:0!important;background:#fff!important}.page{width:194mm!important;max-width:194mm!important;min-height:281mm!important;margin:0 auto!important;padding:7mm!important;box-shadow:none!important;border-radius:0!important}.items-table{width:100%!important;table-layout:fixed!important}.items-table th,.items-table td{font-size:11px!important;padding:6px 4px!important}}
+ @page{size:A4 portrait;margin:8mm}
+ @media print{html,body{width:210mm!important;margin:0!important;padding:0!important;background:#fff!important}.page{width:194mm!important;max-width:194mm!important;min-height:281mm!important;margin:0 auto!important;padding:7mm!important;box-shadow:none!important;border-radius:0!important}.items-table{width:100%!important;table-layout:fixed!important}.items-table th,.items-table td{font-size:11px!important;padding:6px 4px!important}}
 </style></head><body><div class="page">
 <div class="header"><div class="company-info">
 ${N?.companyLogo?`<img src="${N.companyLogo}" alt="\u0634\u0639\u0627\u0631" class="company-logo">`:`<div class="logo-placeholder">${(N?.companyName??"\u062D").slice(0,2)}</div>`}
