@@ -12,6 +12,26 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="محاسبة" />
     <link rel="apple-touch-icon" href="./icon/icon-192.png" />
+    <script id="force-update">
+(function () {
+  const params = new URLSearchParams(window.location.search);
+  if (!params.has("update")) return;
+  (async function () {
+    try {
+      if ("serviceWorker" in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map((registration) => registration.unregister()));
+      }
+      if ("caches" in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map((name) => caches.delete(name)));
+      }
+    } finally {
+      window.location.replace(window.location.origin + window.location.pathname);
+    }
+  })();
+})();
+</script>
     <script>
       try {
         let theme = localStorage.getItem("theme");
