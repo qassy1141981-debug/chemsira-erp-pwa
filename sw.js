@@ -1,8 +1,8 @@
-const CACHE = "chemsira-erp-v-return-1";
+const CACHE = "chemsira-erp-items-08ce931f";
 const CORE = [
   "./",
   "./index.html",
-  "./assets/index-chemsira.js",
+  "./assets/index-chemsira.js?v=items-08ce931f",
   "./assets/index-DqJGh83Z.css",
   "./offline.html",
   "./site.webmanifest",

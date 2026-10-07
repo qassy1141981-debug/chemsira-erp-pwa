@@ -1,0 +1,10 @@
+{
+  "version": "items-08ce931f",
+  "sourceCommit": "08ce931f46f8adb37a5fe1f64a74e05d8af41ea3",
+  "bundle": {
+    "path": "assets/index-chemsira.js",
+    "sha256": "84e8817c3db078f7ea83a8d7c49cec6d318306f4fb451fbaf3c96891b0510766",
+    "size": 1540560
+  },
+  "automatedTestsPassed": 50
+}
