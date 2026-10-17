@@ -1,10 +1,10 @@
 {
-  "version": "invoice-account-20fbe7e1",
-  "sourceCommit": "20fbe7e1fbe4781ed9791bb41e17e2f2f18a1407",
+  "version": "dashboard-profit-373795bd",
+  "sourceCommit": "373795bd862ff3680874c2457d9fc13e21344464",
   "bundle": {
     "path": "assets/index-chemsira.js",
-    "sha256": "f73b2cb128cb780b66e815038f6de5546a6f72977c61d87fec1c4d26d9904ec4",
-    "size": 1547570
+    "sha256": "127dc7845da52fa91cdf29b2fb27077e6e25f0b7b52bf4b3d7df4bb3db9a750d",
+    "size": 1552574
   },
-  "automatedTestsPassed": 72
+  "automatedTestsPassed": 103
 }

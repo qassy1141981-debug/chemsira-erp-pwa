@@ -1,8 +1,8 @@
-const CACHE = "chemsira-erp-invoice-account-20fbe7e1";
+const CACHE = "chemsira-erp-dashboard-profit-373795bd";
 const CORE = [
   "./",
   "./index.html",
-  "./assets/index-chemsira.js?v=invoice-account-20fbe7e1",
+  "./assets/index-chemsira.js?v=dashboard-profit-373795bd",
   "./assets/index-DqJGh83Z.css",
   "./offline.html",
   "./site.webmanifest",
