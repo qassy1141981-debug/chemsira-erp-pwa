@@ -1,9 +1,10 @@
-const CACHE = "chemsira-erp-dashboard-profit-373795bd";
+const CACHE = "chemsira-erp-local-save-20261030";
 const CORE = [
   "./",
   "./index.html",
   "./assets/index-chemsira.js?v=dashboard-profit-373795bd",
   "./assets/index-DqJGh83Z.css",
+  "./local-storage-status.js?v=local-save-20261030",
   "./offline.html",
   "./site.webmanifest",
 ];

@@ -41,9 +41,45 @@
         document.documentElement.classList.add(theme);
       } catch (e) {}
     </script>
+    <style>
+      #local-save-status {
+        position: fixed;
+        z-index: 9999;
+        inset-inline-start: 16px;
+        bottom: 16px;
+        border: 1px solid #d1d5db;
+        border-radius: 999px;
+        padding: 8px 12px;
+        background: #fff;
+        color: #334155;
+        box-shadow: 0 3px 14px rgb(15 23 42 / 14%);
+        font: 600 12px/1.4 system-ui, sans-serif;
+        cursor: pointer;
+      }
+      #local-save-status[data-state="saved"] {
+        border-color: #86efac;
+        color: #166534;
+      }
+      #local-save-status[data-state="warning"] {
+        border-color: #fcd34d;
+        color: #92400e;
+      }
+      #local-save-status:focus-visible {
+        outline: 3px solid #60a5fa;
+        outline-offset: 2px;
+      }
+      .dark #local-save-status {
+        background: #172033;
+        color: #e2e8f0;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
+    <button id="local-save-status" type="button" data-state="checking" aria-live="polite">
+      جارٍ التحقق من التخزين المحلي…
+    </button>
+    <script src="./local-storage-status.js?v=local-save-20261030" defer></script>
     <script type="module" src="./assets/index-chemsira.js?v=dashboard-profit-373795bd"></script>
     <script>
       if ("serviceWorker" in navigator) {
