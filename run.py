@@ -7,11 +7,12 @@ class AppHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
         parsed = urlsplit(self.path)
         path = parsed.path
-        app_prefix = "/alsafa-accounting"
-        if path == app_prefix:
-            path = f"{app_prefix}/"
-        if path.startswith(f"{app_prefix}/"):
-            path = path[len(app_prefix) :]
+        for app_prefix in ("/alsafa-accounting", "/chemsira-erp-pwa"):
+            if path == app_prefix:
+                path = f"{app_prefix}/"
+            if path.startswith(f"{app_prefix}/"):
+                path = path[len(app_prefix) :]
+                break
         self.path = path + (f"?{parsed.query}" if parsed.query else "")
 
         requested = self.translate_path(path)

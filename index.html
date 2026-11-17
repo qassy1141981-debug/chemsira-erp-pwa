@@ -8,6 +8,31 @@
     <link rel="icon" type="image/png" href="./icon/icon-192.png" />
     <link rel="manifest" href="./site.webmanifest" />
     <link rel="stylesheet" href="./assets/index-DqJGh83Z.css?v=restored-20260922" />
+    <script>
+      (() => {
+        if (!("serviceWorker" in navigator)) return;
+
+        const manifestLink = document.querySelector('link[rel="manifest"]');
+        if (!manifestLink) return;
+
+        const appBase = new URL(".", manifestLink.href);
+        const appScope = appBase.pathname.endsWith("/")
+          ? appBase.pathname
+          : `${appBase.pathname}/`;
+        const workerUrl = new URL("sw.js", appBase).href;
+        const originalRegister = navigator.serviceWorker.register.bind(
+          navigator.serviceWorker,
+        );
+
+        navigator.serviceWorker.register = (scriptUrl, options = {}) => {
+          const requestedUrl = new URL(scriptUrl, appBase);
+          if (!requestedUrl.pathname.endsWith("/sw.js")) {
+            return originalRegister(scriptUrl, options);
+          }
+          return originalRegister(workerUrl, { ...options, scope: appScope });
+        };
+      })();
+    </script>
     <meta name="theme-color" content="#1e2a4a" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="محاسبة" />
@@ -76,10 +101,10 @@
   </head>
   <body>
     <div id="root"></div>
-    <button id="local-save-status" type="button" data-state="checking" aria-live="polite">
+    <button id="local-save-status" type="button" data-state="checking" aria-live="polite" hidden>
       جارٍ التحقق من التخزين المحلي…
     </button>
-    <script src="./local-storage-status.js?v=local-save-20261030" defer></script>
+    <script src="./local-storage-status.js?v=local-save-hidden-20261117" defer></script>
     <script type="module" src="./assets/index-chemsira.js?v=dashboard-profit-373795bd"></script>
     <script>
       if ("serviceWorker" in navigator) {

@@ -15,7 +15,7 @@ module.exports = defineConfig({
   fullyParallel: false,
   reporter: "list",
   use: {
-    baseURL: "http://127.0.0.1:5000",
+    baseURL: "http://127.0.0.1:5000/chemsira-erp-pwa/",
     browserName: "chromium",
     launchOptions: {
       ...(executablePath ? { executablePath } : {}),

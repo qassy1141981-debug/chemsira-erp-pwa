@@ -3,8 +3,8 @@ const { test, expect } = require("@playwright/test");
 const databaseName = "AccountingSystem";
 
 async function openApp(page) {
-  await page.goto("/");
-  await expect(page.locator("#local-save-status")).toBeVisible();
+  await page.goto("./");
+  await expect(page.locator("#local-save-status")).toBeHidden();
   await page.waitForFunction(
     () => document.querySelector("#root")?.textContent?.trim().length > 0,
   );
@@ -45,96 +45,64 @@ async function startTrial(page) {
   }, databaseName);
 }
 
-test("a local application record is still present after reload", async ({
-  page,
-}) => {
-  await openApp(page);
+async function setUpAndSignIn(page) {
   await startTrial(page);
 
-  const record = {
-    id: `playwright-${Date.now()}-${Math.random().toString(16).slice(2)}`,
-    name: "Playwright persistence check",
-  };
+  await page
+    .getByPlaceholder("مثال: شركة النور للمنظفات")
+    .fill(`شركة اختبار ${Date.now()}`);
+  await page.getByRole("button", { name: "ابدأ الاستخدام" }).click();
 
+  await page.getByPlaceholder("admin").fill("admin");
+  await page.locator('input[type="password"]').fill("admin123");
+  await page.getByRole("button", { name: "تسجيل الدخول" }).click();
+  await expect(page.getByRole("link", { name: "العملاء" })).toBeVisible();
+}
+
+test("a customer can be added and edited offline, then remains after reload", async ({
+  page,
+  context,
+}) => {
+  await openApp(page);
+  await setUpAndSignIn(page);
+  await page.goto("./#/customers");
+  await expect(page.getByRole("heading", { name: "العملاء" })).toBeVisible();
+  await waitForServiceWorker(page);
+
+  const customerName = `Offline customer ${Date.now()}`;
+  const editedCustomerName = `${customerName} edited`;
+  await context.setOffline(true);
   try {
-    const saved = await page.evaluate(
-      ({ databaseName, record }) =>
-        new Promise((resolve, reject) => {
-          const request = indexedDB.open(databaseName);
-          request.onerror = () => reject(request.error);
-          request.onsuccess = () => {
-            const database = request.result;
-            if (!database.objectStoreNames.contains("customers")) {
-              database.close();
-              reject(new Error("The application customers store is unavailable"));
-              return;
-            }
+    await page.getByRole("button", { name: "إضافة عميل" }).last().click();
+    let customerDialog = page.getByRole("dialog");
+    await customerDialog
+      .getByPlaceholder("مثال: محمد أحمد")
+      .fill(customerName);
+    await customerDialog
+      .getByRole("button", { name: "إضافة", exact: true })
+      .click();
+    await expect(page.getByText(customerName, { exact: true })).toBeVisible();
 
-            const transaction = database.transaction("customers", "readwrite");
-            transaction.objectStore("customers").put(record);
-            transaction.oncomplete = () => {
-              database.close();
-              resolve(true);
-            };
-            transaction.onerror = () => reject(transaction.error);
-            transaction.onabort = () => reject(transaction.error);
-          };
-        }),
-      { databaseName, record },
-    );
-    expect(saved).toBe(true);
+    const customerRow = page.getByRole("row").filter({ hasText: customerName });
+    await customerRow.getByTitle("تعديل").click();
+    customerDialog = page.getByRole("dialog");
+    await expect(customerDialog).toBeVisible();
+    await customerDialog
+      .getByPlaceholder("مثال: محمد أحمد")
+      .fill(editedCustomerName);
+    await customerDialog.getByRole("button", { name: "حفظ", exact: true }).click();
+    await expect(
+      page.getByText(editedCustomerName, { exact: true }),
+    ).toBeVisible();
+    await expect(page.getByText(customerName, { exact: true })).toHaveCount(0);
 
     await page.reload();
-    await expect
-      .poll(() =>
-        page.evaluate(
-          ({ databaseName, id }) =>
-            new Promise((resolve, reject) => {
-              const request = indexedDB.open(databaseName);
-              request.onerror = () => reject(request.error);
-              request.onsuccess = () => {
-                const database = request.result;
-                const transaction = database.transaction("customers", "readonly");
-                const lookup = transaction.objectStore("customers").get(id);
-                lookup.onsuccess = () => {
-                  const found = lookup.result;
-                  database.close();
-                  resolve(found?.name ?? null);
-                };
-                lookup.onerror = () => reject(lookup.error);
-              };
-            }),
-          { databaseName, id: record.id },
-        ),
-      )
-      .toBe(record.name);
+    await expect(page).toHaveTitle("النظام المحاسبي المتكامل");
+    await expect(
+      page.getByText(editedCustomerName, { exact: true }),
+    ).toBeVisible();
   } finally {
-    await page.evaluate(
-      ({ databaseName, id }) =>
-        new Promise((resolve) => {
-          const request = indexedDB.open(databaseName);
-          request.onerror = () => resolve();
-          request.onsuccess = () => {
-            const database = request.result;
-            if (!database.objectStoreNames.contains("customers")) {
-              database.close();
-              resolve();
-              return;
-            }
-            const transaction = database.transaction("customers", "readwrite");
-            transaction.objectStore("customers").delete(id);
-            transaction.oncomplete = () => {
-              database.close();
-              resolve();
-            };
-            transaction.onerror = transaction.onabort = () => {
-              database.close();
-              resolve();
-            };
-          };
-        }),
-      { databaseName, id: record.id },
-    );
+    await context.setOffline(false);
   }
 });
 
@@ -156,7 +124,42 @@ test("the application shell opens from its service-worker cache offline", async 
   }
 });
 
-test("the save indicator warns when persistent storage is refused", async ({
+test("the installed app opens from its manifest start URL while offline", async ({
+  page,
+  context,
+}) => {
+  await openApp(page);
+  await waitForServiceWorker(page);
+
+  const installTarget = await page.evaluate(async () => {
+    const manifestUrl = document.querySelector('link[rel="manifest"]').href;
+    const manifest = await fetch(manifestUrl).then((response) => response.json());
+    const startUrl = new URL(manifest.start_url, manifestUrl);
+    const scopeUrl = new URL(manifest.scope, manifestUrl);
+    const registration = await navigator.serviceWorker.getRegistration(startUrl.href);
+
+    return {
+      startUrl: startUrl.href,
+      scope: scopeUrl.href,
+      registrationScope: registration?.scope,
+    };
+  });
+
+  expect(installTarget.startUrl.startsWith(installTarget.scope)).toBe(true);
+  expect(installTarget.registrationScope).toBe(installTarget.scope);
+
+  await context.setOffline(true);
+  try {
+    await page.goto(installTarget.startUrl);
+    await expect(page).toHaveTitle("النظام المحاسبي المتكامل");
+    await expect(page.locator("#root")).not.toBeEmpty();
+    await expect(page.locator("#local-save-status")).toBeHidden();
+  } finally {
+    await context.setOffline(false);
+  }
+});
+
+test("background storage checks stay hidden when persistence is refused", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -171,10 +174,103 @@ test("the save indicator warns when persistent storage is refused", async ({
   await openApp(page);
 
   const indicator = page.locator("#local-save-status");
+  await expect(indicator).toBeHidden();
   await expect(indicator).toHaveAttribute("data-state", "warning");
   await expect(indicator).toHaveText("الحفظ المحلي نشط");
   await expect(indicator).toHaveAttribute(
     "title",
     "البيانات محفوظة على هذا الجهاز. اضغط لطلب حمايتها من الإزالة التلقائية بواسطة المتصفح.",
   );
+});
+
+test("the save indicator warns when an AccountingSystem write is aborted", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "storage", {
+      configurable: true,
+      value: {
+        persist: () =>
+          new Promise((resolve) => {
+            window.resolvePersistentStorageRequest = resolve;
+          }),
+      },
+    });
+  });
+
+  await openApp(page);
+  await startTrial(page);
+
+  await page.evaluate((databaseName) => {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(databaseName);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const database = request.result;
+        const transaction = database.transaction("customers", "readwrite");
+        transaction.addEventListener(
+          "complete",
+          () => {
+            database.close();
+            resolve();
+          },
+          { once: true },
+        );
+        transaction.addEventListener(
+          "abort",
+          () => reject(transaction.error || new Error("Setup transaction aborted")),
+          { once: true },
+        );
+        transaction.objectStore("customers").clear();
+      };
+    });
+  }, databaseName);
+
+  const abortedWriteStatus = await page.evaluate((databaseName) => {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(databaseName);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const database = request.result;
+        const transaction = database.transaction("customers", "readwrite");
+        transaction.addEventListener(
+          "abort",
+          () => {
+            const warningAtAbort = {
+              state: document.querySelector("#local-save-status").dataset.state,
+              text: document.querySelector("#local-save-status").textContent,
+              title: document.querySelector("#local-save-status").title,
+            };
+            window.resolvePersistentStorageRequest(true);
+            queueMicrotask(() => {
+              const statusAfterPersistenceResponse = {
+                state: document.querySelector("#local-save-status").dataset.state,
+                text: document.querySelector("#local-save-status").textContent,
+                title: document.querySelector("#local-save-status").title,
+              };
+              database.close();
+              resolve({ warningAtAbort, statusAfterPersistenceResponse });
+            });
+          },
+          { once: true },
+        );
+        transaction.objectStore("customers").clear();
+        transaction.abort();
+      };
+    });
+  }, databaseName);
+
+  expect(abortedWriteStatus).toEqual({
+    warningAtAbort: {
+      state: "warning",
+      text: "تعذر إتمام الحفظ",
+      title: "لم تكتمل معاملة قاعدة البيانات المحلية.",
+    },
+    statusAfterPersistenceResponse: {
+      state: "warning",
+      text: "تعذر إتمام الحفظ",
+      title: "لم تكتمل معاملة قاعدة البيانات المحلية.",
+    },
+  });
+  await expect(page.locator("#local-save-status")).toBeVisible();
 });
