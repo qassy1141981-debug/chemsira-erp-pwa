@@ -53,16 +53,7 @@ jobs:
           api-level: 35
           arch: x86_64
           disable-animations: true
-          script: |
-            adb shell svc wifi disable
-            adb shell svc data disable
-            set +e
-            mkdir -p generated-artifacts
-            gradle -p native/android connectedDebugAndroidTest --no-daemon > generated-artifacts/android-test.log 2>&1
-            result=$?
-            tail -100 generated-artifacts/android-test.log
-            python3 native/tests/report-android.py
-            exit "$result"
+          script: bash native/tests/run-android-tests.sh
       - name: Android test reports
         if: always()
         uses: actions/upload-artifact@v4
