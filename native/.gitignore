@@ -1,0 +1,7 @@
+/android/.gradle/
+/android/**/build/
+/android/local.properties
+/android/app/src/main/assets/accounting.html
+/node_modules/
+/windows/offline/
+/windows/sqlite.cjs

@@ -1,0 +1,24 @@
+appId: com.alsafa.accounting
+productName: Alsafa Accounting
+directories:
+  output: ../../generated-artifacts/accounting-native-windows
+files:
+  - windows/main.cjs
+  - windows/preload.cjs
+  - windows/sqlite.cjs
+  - windows/app.ico
+  - windows/offline/native.html
+  - package.json
+electronLanguages:
+  - ar
+  - en-US
+compression: maximum
+win:
+  icon: windows/app.ico
+  target: nsis
+  signAndEditExecutable: false
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  deleteAppDataOnUninstall: false
+artifactName: "Alsafa-Accounting-Setup-${version}.${ext}"

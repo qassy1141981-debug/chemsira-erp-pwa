@@ -1,0 +1,17 @@
+{
+  "name": "alsafa-accounting-offline",
+  "version": "1.1.0",
+  "private": true,
+  "description": "Offline accounting with native on-device SQLite",
+  "packageManager": "pnpm@10.26.1",
+  "main": "windows/main.cjs",
+  "scripts": {
+    "build:windows": "electron-builder --config windows/electron-builder.yml --win nsis --x64"
+  },
+  "devDependencies": {
+    "electron": "45.3.3",
+    "electron-builder": "26.18.0",
+    "esbuild": "0.28.2",
+    "indexeddbshim": "16.1.0"
+  }
+}

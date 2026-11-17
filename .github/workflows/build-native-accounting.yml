@@ -1,0 +1,72 @@
+name: Build offline accounting installers
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "native/**"
+      - "scripts/build-offline-accounting.mjs"
+      - ".github/workflows/build-native-accounting.yml"
+permissions:
+  contents: read
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - uses: pnpm/action-setup@v4
+        with:
+          version: "10.26.1"
+          run_install: false
+      - run: pnpm --dir native --ignore-workspace install --frozen-lockfile --ignore-scripts
+      - name: Bundle local accounting files
+        shell: bash
+        run: |
+          export ACCOUNTING_BUILD_PACKAGE="$PWD/native/package.json"
+          if [ -f index.html ]; then export ACCOUNTING_PUBLIC_DIR="$PWD"; fi
+          node scripts/build-offline-accounting.mjs
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.11.1"
+      - run: gradle -p native/android assembleDebug --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Android-APK-testing
+          path: native/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - uses: pnpm/action-setup@v4
+        with:
+          version: "10.26.1"
+          run_install: false
+      - run: pnpm --dir native --ignore-workspace install --frozen-lockfile --ignore-scripts
+      - name: Bundle local accounting files
+        shell: bash
+        run: |
+          export ACCOUNTING_BUILD_PACKAGE="$PWD/native/package.json"
+          if [ -f index.html ]; then export ACCOUNTING_PUBLIC_DIR="$PWD"; fi
+          node scripts/build-offline-accounting.mjs
+      - run: pnpm --dir native --ignore-workspace run build:windows
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Windows-installer
+          path: generated-artifacts/accounting-native-windows/*.exe
+          if-no-files-found: error
