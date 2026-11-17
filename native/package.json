@@ -9,6 +9,7 @@
     "build:windows": "electron-builder --config windows/electron-builder.yml --win nsis --x64"
   },
   "devDependencies": {
+    "@playwright/test": "1.64.1",
     "electron": "45.3.3",
     "electron-builder": "26.18.0",
     "esbuild": "0.28.2",

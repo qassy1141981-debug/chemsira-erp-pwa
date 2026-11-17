@@ -1,7 +1,7 @@
 appId: com.alsafa.accounting
 productName: Alsafa Accounting
 directories:
-  output: ../../generated-artifacts/accounting-native-windows
+  output: ../generated-artifacts/accounting-native-windows
 files:
   - windows/main.cjs
   - windows/preload.cjs
