@@ -21,6 +21,12 @@ protocol.registerSchemesAsPrivileged([
 
 app.setName("AlsafaAccounting");
 app.commandLine.appendSwitch("disable-http-cache");
+const ownsInstance = app.requestSingleInstanceLock();
+if (!ownsInstance) app.quit();
+app.on("second-instance", () => {
+  const window = BrowserWindow.getAllWindows()[0];
+  if (window) { if (window.isMinimized()) window.restore(); window.focus(); }
+});
 
 function showInternetRequiredNotice() {
   void dialog.showMessageBox({
@@ -35,6 +41,7 @@ function isLocalAppUrl(url) {
 }
 
 app.whenReady().then(async () => {
+  if (!ownsInstance) return;
   app.setPath(
     "userData",
     path.join(app.getPath("appData"), "AlsafaAccounting"),

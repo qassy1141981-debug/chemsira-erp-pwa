@@ -6,11 +6,15 @@ const path = require("node:path");
   const executablePath = path.resolve(__dirname,
     "../../generated-artifacts/accounting-native-windows/win-unpacked/Alsafa Accounting.exe");
   const launch = () => _electron.launch({ executablePath, timeout: 45000 });
+  const waitForNativeStorage = async (page) => {
+    await page.waitForFunction(() => Boolean(window.nativeStorageReady), null, { timeout: 30000 });
+    await page.evaluate(() => window.nativeStorageReady);
+  };
   const first = await launch();
   try {
     const page = await first.firstWindow();
-    await page.evaluate(() => window.nativeStorageReady);
-    await expect(page.locator("#root")).not.toBeEmpty();
+    await waitForNativeStorage(page);
+    await expect(page.locator("#root")).not.toBeEmpty({ timeout: 15000 });
     await page.evaluate(async () => {
       const db = await new Promise((ok, fail) => {
         const r = indexedDB.open("WindowsSQLiteTest", 1);
@@ -29,7 +33,7 @@ const path = require("node:path");
   const second = await launch();
   try {
     const page = await second.firstWindow();
-    await page.evaluate(() => window.nativeStorageReady);
+    await waitForNativeStorage(page);
     assert.equal(await page.evaluate(async () => {
       const db = await new Promise((ok, fail) => {
         const r = indexedDB.open("WindowsSQLiteTest", 1);
@@ -45,4 +49,9 @@ const path = require("node:path");
     }), true);
     console.log("PASS: packaged Windows executable reopened native SQLite data.");
   } finally { await second.close(); }
-})().catch((error) => { console.error(error); process.exitCode = 1; });
+})().catch((error) => {
+  console.error(error);
+  console.error("::error title=Windows native SQLite test::" +
+    String(error.stack || error).replaceAll("%", "%25").replaceAll("\r", "%0D").replaceAll("\n", "%0A"));
+  process.exitCode = 1;
+});

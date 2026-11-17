@@ -32,6 +32,9 @@ const assert = require("node:assert/strict");
         : bridge.request(body);
       if (!JSON.parse(reply).ok) console.error("SQL FAILURE", JSON.parse(body).op, JSON.parse(body).sql, reply);
       response.end(reply);
+    } else if (request.url === "/seed") {
+      response.writeHead(200, { "content-type": "text/html" });
+      response.end("<!doctype html><title>Legacy storage fixture</title>");
     } else {
       response.writeHead(200, { "content-type": "text/html;charset=utf-8" });
       response.end(html);
@@ -47,6 +50,24 @@ const assert = require("node:assert/strict");
   page.on("pageerror", (error) => { errors.push(error.message); console.error("PAGE ERROR", error.stack); });
   page.on("console", (message) => { if(message.type()==="error")console.error("BROWSER", message.text()); });
   try {
+    await page.goto(`${url}/seed`);
+    await page.evaluate(() => new Promise((ok, fail) => {
+      localStorage.setItem("legacy-local-setting", "preserve-this");
+      const open = indexedDB.open("AccountingSystem", 1);
+      open.onupgradeneeded = () => {
+        const customer = open.result.createObjectStore("customers", { keyPath: "id" });
+        customer.createIndex("name", "name");
+        const treasury = open.result.createObjectStore("treasury", { keyPath: "id" });
+        treasury.createIndex("date", "date"); treasury.createIndex("type", "type");
+      };
+      open.onerror = () => fail(open.error);
+      open.onsuccess = () => {
+        const db = open.result;
+        const tx = db.transaction("customers", "readwrite");
+        tx.objectStore("customers").put({ id: "legacy-customer", name: "عميل سابق", balance: 7 });
+        tx.oncomplete = () => { db.close(); ok(); }; tx.onabort = () => fail(tx.error);
+      };
+    }));
     await page.goto(url);
     await page.evaluate(() => window.nativeStorageReady);
     await expect(page.locator("#root")).not.toBeEmpty({ timeout: 15000 });
@@ -57,6 +78,19 @@ const assert = require("node:assert/strict");
     if (await trial.count()) await trial.click();
     await page.waitForTimeout(1500);
     assert.deepEqual(errors, []);
+    const legacy = await page.evaluate(() => new Promise((ok, fail) => {
+      const open = indexedDB.open("AccountingSystem");
+      open.onerror = () => fail(open.error);
+      open.onsuccess = () => {
+        const db = open.result;
+        const request = db.transaction("customers").objectStore("customers").get("legacy-customer");
+        request.onsuccess = () => { db.close(); ok({
+          balance: request.result.balance, setting: localStorage.getItem("legacy-local-setting"),
+        }); }; request.onerror = () => fail(request.error);
+      };
+    }));
+    assert.deepEqual(legacy, { balance: 7, setting: "preserve-this" });
+    console.log("PASS: existing local movements and settings migrated without deleting the source database.");
 
     await page.evaluate(async () => {
       localStorage.setItem("native-persistence-test", "stored-in-sqlite");

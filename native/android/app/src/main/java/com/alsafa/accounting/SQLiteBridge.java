@@ -37,7 +37,10 @@ public final class SQLiteBridge {
             SQLiteDatabase db = SQLiteDatabase.openOrCreateDatabase(file, null);
             db.enableWriteAheadLogging();
             db.execSQL("PRAGMA synchronous=FULL");
-            db.execSQL("PRAGMA busy_timeout=5000");
+            // This PRAGMA returns a row; Android rejects it through execSQL.
+            try (Cursor timeout = db.rawQuery("PRAGMA busy_timeout=5000", null)) {
+                timeout.moveToFirst();
+            }
             databases.put(name, db);
             return db;
         } catch (Exception error) {

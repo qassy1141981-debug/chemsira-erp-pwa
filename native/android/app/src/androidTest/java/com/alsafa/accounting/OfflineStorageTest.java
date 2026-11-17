@@ -15,7 +15,9 @@ public class OfflineStorageTest {
         CountDownLatch latch = new CountDownLatch(1);
         AtomicReference<String> value = new AtomicReference<>();
         activity.onActivity(screen -> {
+            assertNull("Native startup failed: " + screen.getStartupError(), screen.getStartupError());
             WebView web = (WebView) ((ViewGroup) screen.findViewById(android.R.id.content)).getChildAt(0);
+            assertNotNull("Native WebView did not initialize", web);
             web.evaluateJavascript(script, result -> { value.set(result); latch.countDown(); });
         });
         assertTrue("WebView did not respond", latch.await(15, TimeUnit.SECONDS));

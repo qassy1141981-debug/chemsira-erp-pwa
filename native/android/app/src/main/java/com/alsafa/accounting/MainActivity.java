@@ -26,6 +26,8 @@ public final class MainActivity extends Activity {
     private SQLiteBridge database;
     private ValueCallback<Uri[]> filePicker;
     private byte[] pendingExport;
+    private String startupError;
+    String getStartupError() { return startupError; }
 
     public final class NativeFiles {
         @JavascriptInterface public void saveFile(String name, String mime, String base64) {
@@ -99,6 +101,10 @@ public final class MainActivity extends Activity {
                     new String(output.toByteArray(), StandardCharsets.UTF_8), "text/html", "UTF-8", null);
             }
         } catch (Exception error) {
+            startupError = error.toString();
+            Throwable cause = error.getCause();
+            while (cause != null) { startupError += "\n" + cause; cause = cause.getCause(); }
+            android.util.Log.e("AccountingNative", startupError, error);
             new AlertDialog.Builder(this).setTitle("تعذر فتح قاعدة بيانات الجهاز")
                 .setMessage("لم تُحذف بياناتك. أعد تشغيل التطبيق أو استعد نسخة احتياطية.")
                 .setPositiveButton("إغلاق", (dialog, which) -> finish()).show();
