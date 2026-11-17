@@ -5,6 +5,9 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.webkit.JavascriptInterface;
+import android.print.PrintManager;
+import android.util.Base64;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
@@ -15,12 +18,43 @@ import android.widget.Toast;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
 public final class MainActivity extends Activity {
     private WebView webView;
     private SQLiteBridge database;
     private ValueCallback<Uri[]> filePicker;
+    private byte[] pendingExport;
+
+    public final class NativeFiles {
+        @JavascriptInterface public void saveFile(String name, String mime, String base64) {
+            runOnUiThread(() -> {
+                if (pendingExport != null) {
+                    Toast.makeText(MainActivity.this, "أكمل حفظ الملف السابق أولًا.", Toast.LENGTH_LONG).show();
+                    return;
+                }
+                try {
+                    if (base64.length() > 70 * 1024 * 1024) throw new IllegalArgumentException("Export too large");
+                    pendingExport = Base64.decode(base64, Base64.DEFAULT);
+                    Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                    intent.addCategory(Intent.CATEGORY_OPENABLE);
+                    intent.setType(mime == null || mime.isEmpty() ? "application/octet-stream" : mime);
+                    intent.putExtra(Intent.EXTRA_TITLE, name);
+                    startActivityForResult(intent, 11);
+                } catch (Exception error) {
+                    pendingExport = null;
+                    Toast.makeText(MainActivity.this, "تعذر تصدير الملف. لم يتم حذف بياناتك.", Toast.LENGTH_LONG).show();
+                }
+            });
+        }
+        @JavascriptInterface public void printPage() {
+            runOnUiThread(() -> {
+                PrintManager manager = (PrintManager) getSystemService(PRINT_SERVICE);
+                manager.print("Accounting", webView.createPrintDocumentAdapter("Accounting"), null);
+            });
+        }
+    }
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
@@ -33,6 +67,7 @@ public final class MainActivity extends Activity {
             webView.getSettings().setAllowFileAccess(false);
             webView.getSettings().setAllowContentAccess(true);
             webView.addJavascriptInterface(database, "nativeSQLite");
+            webView.addJavascriptInterface(new NativeFiles(), "nativeFiles");
             webView.setWebViewClient(new WebViewClient() {
                 @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                     Toast.makeText(MainActivity.this, "الروابط الخارجية تحتاج إلى الإنترنت.", Toast.LENGTH_LONG).show();
@@ -71,6 +106,20 @@ public final class MainActivity extends Activity {
     }
     @Override protected void onActivityResult(int request, int result, Intent data) {
         super.onActivityResult(request, result, data);
+        if (request == 11) {
+            try {
+                if (result == RESULT_OK && data != null && data.getData() != null && pendingExport != null) {
+                    try (OutputStream output = getContentResolver().openOutputStream(data.getData())) {
+                        if (output == null) throw new IllegalStateException("Cannot open export file");
+                        output.write(pendingExport);
+                        output.flush();
+                    }
+                    Toast.makeText(this, "تم حفظ الملف على الجهاز.", Toast.LENGTH_LONG).show();
+                }
+            } catch (Exception error) {
+                Toast.makeText(this, "تعذر حفظ الملف. أعد التصدير.", Toast.LENGTH_LONG).show();
+            } finally { pendingExport = null; }
+        }
         if (request == 10 && filePicker != null) {
             filePicker.onReceiveValue(result == RESULT_OK && data != null && data.getData() != null
                 ? new Uri[]{data.getData()} : null);
@@ -82,7 +131,11 @@ public final class MainActivity extends Activity {
         else super.onBackPressed();
     }
     @Override protected void onDestroy() {
-        if (webView != null) { webView.removeJavascriptInterface("nativeSQLite"); webView.destroy(); }
+        if (webView != null) {
+            webView.removeJavascriptInterface("nativeSQLite");
+            webView.removeJavascriptInterface("nativeFiles");
+            webView.destroy();
+        }
         if (database != null) database.close();
         super.onDestroy();
     }

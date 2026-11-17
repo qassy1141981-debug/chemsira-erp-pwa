@@ -56,7 +56,21 @@ jobs:
           script: |
             adb shell svc wifi disable
             adb shell svc data disable
-            gradle -p native/android connectedDebugAndroidTest --no-daemon
+            set +e
+            mkdir -p generated-artifacts
+            gradle -p native/android connectedDebugAndroidTest --no-daemon > generated-artifacts/android-test.log 2>&1
+            result=$?
+            tail -100 generated-artifacts/android-test.log
+            python3 native/tests/report-android.py
+            exit "$result"
+      - name: Android test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Android-test-reports
+          path: |
+            native/android/app/build/outputs/androidTest-results/
+            generated-artifacts/android-test.log
   windows:
     runs-on: windows-latest
     timeout-minutes: 20

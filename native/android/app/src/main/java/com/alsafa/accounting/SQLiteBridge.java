@@ -92,13 +92,21 @@ public final class SQLiteBridge {
         SQLiteDatabase db = database(request.getString("name"));
         switch (op) {
             case "open": return null;
-            case "begin": db.execSQL("BEGIN IMMEDIATE"); return null;
-            case "commit": db.execSQL("COMMIT"); return null;
-            case "rollback": db.execSQL("ROLLBACK"); return null;
+            case "begin": db.beginTransactionNonExclusive(); return null;
+            case "commit": db.setTransactionSuccessful(); db.endTransaction(); return null;
+            case "rollback": db.endTransaction(); return null;
             case "execute": {
                 String sql = request.getString("sql");
                 JSONArray args = request.getJSONArray("args");
-                String first = sql.trim().split("\\s+", 2)[0].toUpperCase(Locale.ROOT);
+                String first = sql.trim().split("\\s+", 2)[0].replace(";", "").toUpperCase(Locale.ROOT);
+                if (first.equals("BEGIN") || first.equals("COMMIT") || first.equals("END") || first.equals("ROLLBACK")) {
+                    if (first.equals("BEGIN")) db.beginTransactionNonExclusive();
+                    else {
+                        if (first.equals("COMMIT") || first.equals("END")) db.setTransactionSuccessful();
+                        db.endTransaction();
+                    }
+                    return new JSONObject().put("rows", new JSONArray()).put("rowsAffected", 0);
+                }
                 if (first.equals("SELECT") || first.equals("PRAGMA") || first.equals("WITH") || first.equals("EXPLAIN")) {
                     String[] bind = new String[args.length()];
                     for (int index = 0; index < args.length(); index++)

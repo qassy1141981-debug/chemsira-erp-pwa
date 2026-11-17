@@ -9,6 +9,7 @@ const assert = require("node:assert/strict");
 (async () => {
   const directory = mkdtempSync(path.join(tmpdir(), "accounting-sqlite-"));
   let bridge = createSQLiteBridge(directory);
+  let rejectTestCommit = false;
   // Test-only synchronous transport replaces the platform JS interface.
   // The production document forbids all network connections.
   const transport = `<script>window.nativeSQLite={request(json){
@@ -23,7 +24,12 @@ const assert = require("node:assert/strict");
       let body = "";
       for await (const chunk of request) body += chunk;
       response.writeHead(200, { "content-type": "application/json" });
-      const reply = bridge.request(body);
+      const operation = JSON.parse(body);
+      const rejectCommit = rejectTestCommit && operation.name === "CommitFailureTest" &&
+        /^\s*(END|COMMIT)\b/i.test(operation.sql || "");
+      const reply = rejectCommit
+        ? JSON.stringify({ ok: false, error: "Simulated disk commit failure" })
+        : bridge.request(body);
       if (!JSON.parse(reply).ok) console.error("SQL FAILURE", JSON.parse(body).op, JSON.parse(body).sql, reply);
       response.end(reply);
     } else {
@@ -105,6 +111,27 @@ const assert = require("node:assert/strict");
     assert.equal(result.setting, "stored-in-sqlite");
     assert.ok(readdirSync(directory).some((name) => name.endsWith(".sqlite")));
     console.log("PASS: movements and settings survived SQLite close/reopen; aborted multi-table write was rolled back.");
+    await fresh.evaluate(() => new Promise((ok, fail) => {
+      openDatabase("CommitFailureTest", "1").transaction(
+        (tx) => tx.executeSql("CREATE TABLE movements (amount INTEGER)", []), fail, ok);
+    }));
+    rejectTestCommit = true;
+    fresh.on("pageerror", () => {}); // Expected: fail closed, never emit success.
+    await fresh.evaluate(() => {
+      window.falseSuccess = false;
+      openDatabase("CommitFailureTest", "1").transaction(
+        (tx) => tx.executeSql("INSERT INTO movements VALUES(99)", []),
+        () => {},
+        () => { window.falseSuccess = true; });
+    });
+    await expect(fresh.locator("#native-storage-fatal")).toContainText("تعذر إتمام الحفظ");
+    assert.equal(await fresh.evaluate(() => window.falseSuccess), false);
+    const remaining = JSON.parse(bridge.request(JSON.stringify({
+      op: "execute", name: "CommitFailureTest",
+      sql: "SELECT COUNT(*) AS count FROM movements", args: [],
+    })));
+    assert.equal(remaining.result.rows[0].count, 0);
+    console.log("PASS: a failed COMMIT rolls back data and cannot report save success.");
   } finally {
     await browser.close();
     bridge.close();

@@ -90,6 +90,41 @@ window.nativeStorageReady = (async () => {
     });
   }
   native({ op: "kvSet", key: migrationKey, value: "1" });
+  if (window.nativeFiles) {
+    const blobs = new Map();
+    const create = URL.createObjectURL.bind(URL);
+    const revoke = URL.revokeObjectURL.bind(URL);
+    URL.createObjectURL = (blob) => {
+      const url = create(blob); blobs.set(url, blob); return url;
+    };
+    URL.revokeObjectURL = (url) => { blobs.delete(url); revoke(url); };
+    const exportAnchor = (anchor) => {
+      if (!anchor?.hasAttribute("download")) return false;
+      const blob = blobs.get(anchor.href);
+      const data = anchor.href.match(/^data:([^;,]*);base64,(.*)$/s);
+      if (!blob && !data) return false;
+      if (data) {
+        window.nativeFiles.saveFile(anchor.download || "accounting-export", data[1], data[2]);
+        return true;
+      }
+      const reader = new FileReader();
+      reader.onload = () => window.nativeFiles.saveFile(
+        anchor.download || "accounting-export", blob.type,
+        String(reader.result).split(",")[1],
+      );
+      reader.onerror = () => alert("تعذر تجهيز ملف النسخة الاحتياطية. أعد المحاولة.");
+      reader.readAsDataURL(blob);
+      return true;
+    };
+    const click = HTMLAnchorElement.prototype.click;
+    HTMLAnchorElement.prototype.click = function (...args) {
+      if (!exportAnchor(this)) return click.apply(this, args);
+    };
+    document.addEventListener("click", (event) => {
+      if (exportAnchor(event.target.closest?.("a[download]"))) event.preventDefault();
+    }, true);
+    window.print = () => window.nativeFiles.printPage();
+  }
 })();
 window.nativeStorageReady.catch((error) => {
   console.error("Native storage startup failed", error);

@@ -31,8 +31,13 @@ window.openDatabase = (name, version) => {
             // Fail closed before it can emit an IndexedDB "complete" event.
             try { request({ op: "rollback", name }); } catch {}
             const root = document.getElementById("root");
-            root.textContent = "تعذر إتمام الحفظ في قاعدة الجهاز. أوقف العمل وأعد تشغيل التطبيق. لم تُعتبر الحركة محفوظة.";
-            root.setAttribute("role", "alert");
+            root.style.display = "none";
+            const alert = document.createElement("div");
+            alert.id = "native-storage-fatal";
+            alert.setAttribute("role", "alert");
+            alert.style.cssText = "position:fixed;inset:0;z-index:2147483647;background:white;color:#991b1b;padding:40px;font:18px/1.8 system-ui;direction:rtl";
+            alert.textContent = "تعذر إتمام الحفظ في قاعدة الجهاز. أوقف العمل وأعد تشغيل التطبيق. لم تُعتبر الحركة محفوظة.";
+            document.body.appendChild(alert);
             throw error;
           }
           return { error, rows: [], rowsAffected: 0 };
